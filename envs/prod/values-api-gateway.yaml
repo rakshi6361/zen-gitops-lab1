@@ -1,0 +1,94 @@
+fullnameOverride: api-gateway
+
+image:
+  repository: 516209541629.dkr.ecr.us-east-1.amazonaws.com/api-gateway
+  tag: sha-ef1ccc7
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: nginx
+  host: a0ffda4d239d941549d518de18c19f6f-cf2f70374c2e5a74.elb.us-east-1.amazonaws.com
+  path: /api
+  pathType: Prefix
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  allowFromIngressController: true
+  allowFromApiGateway: false
+  ingressControllerNamespace: ingress-nginx
+  ingressControllerPodLabels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/component: controller
+
+livenessProbe:
+  path: /actuator/health
+  port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+readinessProbe:
+  path: /actuator/health/readiness
+  port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
+configmap:
+  SPRING_PROFILES_ACTIVE: prod
+  LOG_LEVEL: DEBUG
+  SERVER_PORT: "8080"
+  # These match the fullnameOverride values of each service
+  AUTH_SERVICE_URL: "http://auth-service:8081"
+  DRUG_CATALOG_URL: "http://drug-catalog-service:8082"
+  NOTIFICATION_URL: "http://notification-service:3000"
+
+  MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics,prometheus"
+
+envFrom:
+  - secretRef:
+      name: db-credentials
+  - secretRef:
+      name: jwt-secret
+
+volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+
+volumes:
+  - name: tmp
+    emptyDir: {}
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::516209541629:role/pharma-prod-eks-role
+  name: api-gateway

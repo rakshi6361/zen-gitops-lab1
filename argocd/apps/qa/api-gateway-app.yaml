@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-gateway-qa
+  namespace: argocd
+  labels:
+    env: qa
+    app: api-gateway
+    managed-by: terraform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: pharma
+
+  source:
+    repoURL: https://github.com/DPP-2026/zen-gitops.git
+    targetRevision: HEAD
+    path: helm-charts
+    helm:
+      valueFiles:
+        - ../envs/qa/values-api-gateway.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: qa
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  revisionHistoryLimit: 10

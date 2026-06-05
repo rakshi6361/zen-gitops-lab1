@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pharma-prod
+  namespace: argocd
+  labels:
+    env: prod
+    managed-by: terraform
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: pharma
+
+  source:
+    # Replace 'DPP-2026' with your GitHub username after forking zen-gitops
+    repoURL: https://github.com/DPP-2026/zen-gitops.git
+    targetRevision: HEAD
+    path: envs/prod
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: prod
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - PruneLast=true
+    retry:
+      limit: 3
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 5m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+
+  revisionHistoryLimit: 10

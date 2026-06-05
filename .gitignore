@@ -1,0 +1,23 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Helm chart lock (re-generated on helm dependency update)
+**/Chart.lock
+**/charts/*.tgz
+
+# Sensitive override files — never commit real secrets
+**/secret-values.yaml
+**/values-secret*.yaml
+
+# Trainer-only design specs
+docs/superpowers/
+
+# Trainer-only — training deck tooling (not for learners)
+scripts/add_k8s_slides.py
+scripts/__pycache__/
+**/*.pptx
