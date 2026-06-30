@@ -1,7 +1,7 @@
 fullnameOverride: auth-service
 image:
   repository: 516209541629.dkr.ecr.us-east-1.amazonaws.com/auth-service
-  tag: sha-9461291
+  tag: sha-81c5e37
   pullPolicy: Always
 service:
   type: ClusterIP
